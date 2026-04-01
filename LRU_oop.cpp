@@ -4,7 +4,9 @@
 #include <algorithm>
 
 class CacheLRU{
-   std::list<std::unordered_map<int, char>> LRU;
+private:
+   std::list<std::pair<int, char>> LRU;
+   std::unordered_map<int, std::list<std::pair<int, char>>::iterator> list_it;
    int max = 3;
 
    public:
@@ -13,22 +15,32 @@ class CacheLRU{
 
    void put(int key, char value)
    {
-        std::unordered_map<int, char> um;
-        um[key] = value;
-        LRU.push_front(um);
-        if(LRU.size() > max)
-            LRU.pop_back();
+        auto it = list_it.find(key);
+        if(it != list_it.end())
+            {
+                it->second->second = value;
+                LRU.splice(LRU.begin(), LRU, it->second);
+            }
+        else{
+            if(LRU.size() > max)
+                {
+                    auto last_key = LRU.back();
+                    list_it.erase(last_key.first);
+                    LRU.pop_back();
+                }
+            LRU.emplace_front(key, value);
+            list_it[key] = LRU.begin();
+        }
    }
 
    char get(int key)
     {   
-        for (auto it = LRU.begin(); it != LRU.end(); it++){
-            if (it->count(key))
-                {
-                    LRU.splice(LRU.begin(), LRU, it);
-                    return it->at(key);
-                }
-        }
+        auto it = list_it.find(key);
+        if(it != list_it.end())
+            {
+            LRU.splice(LRU.begin(), LRU, it->second );
+            return it->second->second;
+            }
         return -1;
     }
 
