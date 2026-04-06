@@ -3,16 +3,13 @@
 #include <unordered_map>
 #include <algorithm>
 
-template <typename T, typename V>
+template <typename T, typename V, size_t N>
 class CacheLRU{
 private:
    std::list<std::pair<T, V>> LRU;
    std::unordered_map<T, typename std::list<std::pair<T, V>>::iterator> MAP_it;
-   T max;
 
 public:
-   CacheLRU(T max) 
-    :max(max){}
 
    void put(T key, V value)
    {
@@ -23,7 +20,7 @@ public:
                 LRU.splice(LRU.begin(), LRU, it->second);
             }
         else{
-            if(LRU.size() == max)
+            if(LRU.size() == N)
                 {
                     auto last_key = LRU.back();
                     MAP_it.erase(last_key.first);
@@ -45,20 +42,17 @@ public:
         return -1;
     }
     
-    friend std::ostream& operator<< <T, V>(std::ostream& os,CacheLRU<T, V>& LRU);
+   friend std::ostream& operator<< (std::ostream& os,CacheLRU<T, V, N>& list){
+        for (auto pair : list.LRU)
+            os<<pair.first<<" "<<pair.second<<std::endl;
+        os<<std::endl;
+        return os;
+    }
 };
-
-template <typename T, typename V>
-std::ostream& operator<<(std::ostream& os,CacheLRU<T, V>& list){
-    for (auto pair : list.LRU)
-        os<<pair.first<<" "<<pair.second<<std::endl;
-    os<<std::endl;
-    return os;
-}
 
 int main(){
 
-    CacheLRU<unsigned, int> LRU{3};
+    CacheLRU<unsigned, int, 3> LRU;
 
     LRU.put(1, 5);
     LRU.put(2, 6);
