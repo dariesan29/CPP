@@ -11,17 +11,30 @@ private:
     size_t availability = 0;
 
 public:
-    bool push(T item)
+    bool push(T& item)
     {       
         if(availability == N){
             std::cout<<"Buffer is full"<<std::endl;
             return false;
-        } 
+        }
         buffer[head % N] = item;
         head++;
         availability++;
         std::cout<<"Push completed - "<<"head: "<<item<<std::endl;
-        return true; 
+        return true;
+    }
+
+    bool push(T&& item)
+    {       
+        if(availability == N){
+            std::cout<<"Buffer is full"<<std::endl;
+            return false;
+        }
+        buffer[head % N] = std::move(item);
+        head++;
+        availability++;
+        std::cout<<"Push completed - "<<"head: "<<item<<std::endl;
+        return true;
     }
 
     bool pop(T& item)
@@ -30,7 +43,7 @@ public:
             std::cout<<"Buffer is empty"<<std::endl;
             return false;
         }
-        item = buffer[tail % N];
+        item = std::move(buffer[tail % N]);
         tail++;
         availability--;
         std::cout<<"Pop completed - "<<"tail: "<<item<<std::endl;
@@ -39,7 +52,7 @@ public:
 
     void print()
     {
-        for(auto item : buffer)
+        for(const auto& item : buffer)
             std::cout<<item<<" ";
         std::cout<<std::endl;
     }
@@ -50,9 +63,12 @@ int main()
 {   
     RingBuffer<int, 4> rb;
     int item;
+    int item_to_push;
+
+    item_to_push = 2;
 
     rb.push(1);
-    rb.push(2);
+    rb.push(item_to_push);
     rb.push(3);
     rb.push(4);
     rb.push(5);
