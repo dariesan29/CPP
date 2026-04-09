@@ -30,7 +30,7 @@ public:
             std::cout<<"Buffer is full"<<std::endl;
             return false;
         }
-        buffer[head % N] = std::move(item);
+        buffer[head % N] = item;
         head++;
         availability++;
         std::cout<<"Push completed - "<<"head: "<<item<<std::endl;
