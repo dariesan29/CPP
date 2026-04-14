@@ -31,7 +31,7 @@ public:
             return false;
         }
         buffer[head % N] = item;
-        head++;
+        head = head + 1 % N;
         availability++;
         std::cout<<"Push completed - "<<"head: "<<item<<std::endl;
         return true;
@@ -44,7 +44,7 @@ public:
             return false;
         }
         item = std::move(buffer[tail % N]);
-        tail++;
+        tail = tail + 1 % N;
         availability--;
         std::cout<<"Pop completed - "<<"tail: "<<item<<std::endl;
         return true;
