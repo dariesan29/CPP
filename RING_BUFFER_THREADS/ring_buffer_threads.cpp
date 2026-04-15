@@ -79,13 +79,6 @@ public:
 int main()
 {   
     RingBuffer<int, 10> rb;
-    int item;
-    int item_to_push;
-
-    int &&a = 5;
-    a = 2;
-
-    item_to_push = 2;
 
     std::thread producer([&](){
         for (int i = 1; i < 100; i++)
