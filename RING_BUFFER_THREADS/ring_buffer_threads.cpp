@@ -3,6 +3,7 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <condition_variable>
 
 template <typename T, size_t N>
 class RingBuffer
@@ -13,57 +14,55 @@ private:
     size_t tail = 0;
     size_t availability = 0;
     std::mutex m;
+    std::condition_variable cv_push;
+    std::condition_variable cv_pop;
 
 public:
     bool push(T& item)
     {   
-        std::unique_lock<std::mutex> lg(m);
-        if(availability == N){
-            std::cout<<"Buffer is full"<<std::endl;
-            lg.unlock();
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            lg.lock();
-            return false;
-        }
+        std::unique_lock<std::mutex> ul(m);
+        cv_push.wait(ul,[&](){
+            if(availability == N)
+                std::cout<<"Buffer is full \n";
+            return availability < N;
+        });
         buffer[head % N] = item;
-        head++;
+        head = (head + 1 ) % N;
         availability++;
         std::cout<<"Push completed - "<<"head: "<<item<<std::endl;
+        cv_pop.notify_one();
         return true;
     }
 
     bool push(T&& item)
     {   
-        item = 6;
-        std::unique_lock<std::mutex> lg(m);
-        if(availability == N){
-            std::cout<<"Buffer is full"<<std::endl;
-            lg.unlock();
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            lg.lock();
-            return false;
-        }
+        std::unique_lock<std::mutex> ul(m);
+        cv_push.wait(ul,[&](){
+            if(availability == N)
+                std::cout<<"Buffer is full \n";
+            return availability < N;
+        });
         buffer[head % N] = std::move(item);
-        head = (head + 1) % N;
+        head = (head + 1 ) % N;
         availability++;
         std::cout<<"Push completed - "<<"head: "<<item<<std::endl;
+        cv_pop.notify_one();
         return true;
     }
 
     bool pop(T& item)
     {   
-        std::unique_lock<std::mutex> lg(m);
-        if(!availability){
-            std::cout<<"Buffer is empty"<<std::endl;
-            lg.unlock();
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            lg.lock();
-            return false;
-        }
+        std::unique_lock<std::mutex> ul(m);
+        cv_pop.wait(ul,[&](){
+            if(availability == 0)
+                std::cout<<"Buffer is empty \n";
+            return availability != 0;
+        });
         item = std::move(buffer[tail % N]);
         tail = (tail + 1) % N;
         availability--;
         std::cout<<"Pop completed - "<<"tail: "<<item<<std::endl;
+        cv_push.notify_one();
         return true;
     }
 
@@ -80,6 +79,8 @@ int main()
 {   
     RingBuffer<int, 10> rb;
 
+    int item;
+
     std::thread producer([&](){
         for (int i = 1; i < 100; i++)
             rb.push(i);
@@ -87,7 +88,7 @@ int main()
 
     std::thread consumer([&](){
         for (int i = 1; i < 100; i++)
-            rb.pop(i);
+            rb.pop(item);
     });
 
     producer.join();
