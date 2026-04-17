@@ -18,7 +18,7 @@ private:
     std::condition_variable cv_pop;
 
 public:
-    bool push(T& item)
+    bool push(const T& item)
     {   
         std::unique_lock<std::mutex> ul(m);
         cv_push.wait(ul,[&](){
@@ -87,6 +87,8 @@ int main()
     std::thread producer([&](){
         for (int i = 1; i < 100; i++)
             rb.push(i);
+        const int x = 100;
+        rb.push(x);
     });
 
     std::thread consumer([&](){
