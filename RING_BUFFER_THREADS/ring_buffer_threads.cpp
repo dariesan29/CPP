@@ -26,10 +26,11 @@ public:
                 std::cout<<"Buffer is full \n";
             return availability < N;
         });
-        buffer[head % N] = item;
+        std::cout<<"Head: "<<item;
+        buffer[head % N] = std::move(item);
         head = (head + 1 ) % N;
         availability++;
-        std::cout<<"Push completed - "<<"head: "<<item<<std::endl;
+        std::cout<<"- push completed"<<std::endl;
         cv_pop.notify_one();
         return true;
     }
@@ -42,10 +43,11 @@ public:
                 std::cout<<"Buffer is full \n";
             return availability < N;
         });
+        std::cout<<"Head: "<<item;
         buffer[head % N] = std::move(item);
         head = (head + 1 ) % N;
         availability++;
-        std::cout<<"Push completed - "<<"head: "<<item<<std::endl;
+        std::cout<<" - Push completed"<<std::endl;
         cv_pop.notify_one();
         return true;
     }
@@ -58,10 +60,11 @@ public:
                 std::cout<<"Buffer is empty \n";
             return availability != 0;
         });
+        std::cout<<"Tail: "<<item;
         item = std::move(buffer[tail % N]);
         tail = (tail + 1) % N;
         availability--;
-        std::cout<<"Pop completed - "<<"tail: "<<item<<std::endl;
+        std::cout<<" - Pop completed"<<std::endl;
         cv_push.notify_one();
         return true;
     }
